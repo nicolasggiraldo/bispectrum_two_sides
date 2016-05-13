@@ -267,3 +267,35 @@ int readBinaryFile(int rank){
   
   return 0;
 }
+
+double sinc(double x){
+  if(fabs(x)<1.0e-10)
+    return 1.0;
+  else
+    return sin(M_PI*x)/(M_PI*x);
+}
+
+double pow2(double x){
+  return x*x;
+}
+
+double pow3(double x){
+  return x*x*x;
+}
+
+
+double W_NGP(double k){
+  return sinc( (0.5*k)/GV.KN );
+}
+
+double W_CIC(double k){
+  return pow2( sinc( (0.5*k)/GV.KN ) );
+}
+
+double W_TSC(double k){
+  return pow3( sinc( (0.5*k)/GV.KN ) );
+}
+
+double W_D20(double k){
+  return gsl_spline_eval(spline, fabs(k)/GV.KN, acc);
+}

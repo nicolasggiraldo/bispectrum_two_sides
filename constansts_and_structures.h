@@ -36,6 +36,18 @@ fftw_plan forwardPlan;
 
 
 
+////////////////////////////////////////////////////////////////////
+// GLOBAL VARIABLES FOR INTERPOLATION IN DAUBECHIES-TYPES SCHEMES //
+///////////////////////////////////////////////////////////////////
+gsl_interp_accel *acc = NULL;
+gsl_spline *spline = NULL;
+int len_array_D20 = 0;
+double *x_D20 = NULL;
+double *y_D20 = NULL;
+//FILE *fin_D20 = NULL;
+
+
+
 ///////////////////////////////
 // STRUCTURES OF THE PROGRAM //
 ///////////////////////////////

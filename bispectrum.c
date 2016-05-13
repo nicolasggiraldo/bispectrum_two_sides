@@ -1,13 +1,14 @@
-#include       <stdio.h>
-#include      <stdlib.h>
-#include        <math.h>
-#include       <fftw3.h>
-#include      <string.h>
-#include <gsl/gsl_rng.h>
-#include        <time.h>
-#include      <unistd.h>
-#include      <limits.h>
-#include         <mpi.h>
+#include           <stdio.h>
+#include         <stdlib.h>
+#include           <math.h>
+#include          <fftw3.h>
+#include         <string.h>
+#include    <gsl/gsl_rng.h>
+#include <gsl/gsl_spline.h>
+#include           <time.h>
+#include         <unistd.h>
+#include         <limits.h>
+#include            <mpi.h>
 
 #include "constansts_and_structures.h"
 #include                 "functions.h"
@@ -36,6 +37,7 @@ int main(int argc, char *argv[]){
   int rank, size;
   int Nbins;
   int *taskBin=NULL;
+  double (*W_k)(double) = NULL; // Memory addres to the window function
   struct densityContrast *q1=NULL; /* Array of structure with the subset of 
 				      density contrast with range between 
 				      k1-DELTA_K/2 to k1+DELTA_K/2 */
@@ -147,7 +149,11 @@ int main(int argc, char *argv[]){
   /* Waiting the processor 0 to do the FFT */
   MPI_Barrier(MPI_COMM_WORLD);
   
-  /* Sending all the deltak grid to the others processors */
+  
+  
+  ///////////////////////////////////////////////////
+  //* SENDING ALL DELTAK GRID TO OTHER PROCESSORS *//
+  ///////////////////////////////////////////////////
   chunk = (GV.NGRID3)/sizeof(fftw_complex);
   for(l=0; l<sizeof(fftw_complex); l++)
     MPI_Bcast(denConK+(l*chunk), chunk*sizeof(fftw_complex), MPI_BYTE, 0, MPI_COMM_WORLD); 
@@ -191,6 +197,142 @@ int main(int argc, char *argv[]){
   indexcord[MIN] = -(GV.NGRID/2);
   indexcord[MAX] =  (GV.NGRID/2)-1;
   
+  
+  
+  ///////////////////////////////////////////
+  //* DEFINING THE WINDOW FUNCTION TO USE *//
+  ///////////////////////////////////////////
+  if( strcmp(GV.SCHEME, "NGP") == 0 ){
+    W_k = W_NGP; //NGP
+  }
+  else if( strcmp(GV.SCHEME, "CIC") == 0 ){ 
+    W_k = W_CIC; //CIC
+  }
+  else if( strcmp(GV.SCHEME, "TSC") == 0 ){
+    W_k = W_TSC; // TSC
+  }
+  else if( strcmp(GV.SCHEME, "D20") == 0 ){
+
+    len_array_D20 = 39;
+    x_D20 = (double *) calloc( len_array_D20, sizeof(double));
+    y_D20 = (double *) calloc( len_array_D20, sizeof(double));
+
+    x_D20[0]  = 0.000000000000;
+    x_D20[1]  = 0.105263157895;
+    x_D20[2]  = 0.210526315789;
+    x_D20[3]  = 0.315789473684;
+    x_D20[4]  = 0.421052631579;
+    x_D20[5]  = 0.526315789474;
+    x_D20[6]  = 0.631578947368;
+    x_D20[7]  = 0.736842105263;
+    x_D20[8]  = 0.842105263158;
+    x_D20[9]  = 0.947368421053;
+    x_D20[10] = 1.052631578947;
+    x_D20[11] = 1.157894736842;
+    x_D20[12] = 1.263157894737;
+    x_D20[13] = 1.368421052632;
+    x_D20[14] = 1.473684210526;
+    x_D20[15] = 1.578947368421;
+    x_D20[16] = 1.684210526316;
+    x_D20[17] = 1.789473684211;
+    x_D20[18] = 1.894736842105;
+    x_D20[19] = 2.000000000000;
+    x_D20[20] = 2.105263157895;
+    x_D20[21] = 2.210526315789;
+    x_D20[22] = 2.315789473684;
+    x_D20[23] = 2.421052631579;
+    x_D20[24] = 2.526315789474;
+    x_D20[25] = 2.631578947368;
+    x_D20[26] = 2.736842105263;
+    x_D20[27] = 2.842105263158;
+    x_D20[28] = 2.947368421053;
+    x_D20[29] = 3.052631578947;
+    x_D20[30] = 3.157894736842;
+    x_D20[31] = 3.263157894737;
+    x_D20[32] = 3.368421052632;
+    x_D20[33] = 3.473684210526;
+    x_D20[34] = 3.578947368421;
+    x_D20[35] = 3.684210526316;
+    x_D20[36] = 3.789473684211;
+    x_D20[37] = 3.894736842105;
+    x_D20[38] = 4.000000000000;
+    
+    y_D20[0]  = 1.000000000000;
+    y_D20[1]  = 0.999999986964;
+    y_D20[2]  = 0.999999947844;
+    y_D20[3]  = 0.999999865073;
+    y_D20[4]  = 0.999996615502;
+    y_D20[5]  = 0.999865850668;
+    y_D20[6]  = 0.997888980263;
+    y_D20[7]  = 0.983901583682;
+    y_D20[8]  = 0.929829547217;
+    y_D20[9]  = 0.801587086807;
+    y_D20[10] = 0.597770493103;
+    y_D20[11] = 0.367763547417;
+    y_D20[12] = 0.178328576874;
+    y_D20[13] = 0.064525672159;
+    y_D20[14] = 0.016095961628;
+    y_D20[15] = 0.002430216092;
+    y_D20[16] = 0.000174403891;
+    y_D20[17] = 0.000003474525;
+    y_D20[18] = 0.000000003493;
+    y_D20[19] = 0.000000000009;
+    y_D20[20] = 0.000000002651;
+    y_D20[21] = 0.000001909750;
+    y_D20[22] = 0.000068979711;
+    y_D20[23] = 0.000666947923;
+    y_D20[24] = 0.002917323470;
+    y_D20[25] = 0.007255209141;
+    y_D20[26] = 0.011531053543;
+    y_D20[27] = 0.012504254578;
+    y_D20[28] = 0.009622917401;
+    y_D20[29] = 0.005399117417;
+    y_D20[30] = 0.002259675865;
+    y_D20[31] = 0.000719121329;
+    y_D20[32] = 0.000174034058;
+    y_D20[33] = 0.000030590879;
+    y_D20[34] = 0.000003474474;
+    y_D20[35] = 0.000000201352;
+    y_D20[36] = 0.000000003493;
+    y_D20[37] = 0.000000000002;
+    y_D20[38] = 0.000000000007;
+    
+    // GSL interpolation allocation
+    acc    = gsl_interp_accel_alloc(); // accelerator
+    spline = gsl_spline_alloc(gsl_interp_cspline, len_array_D20); // spline
+
+    // GSL init
+    gsl_spline_init(spline, x_D20, y_D20, len_array_D20);
+    
+    W_k = W_D20; // D20
+  }
+  
+  
+  
+  ////////////////////////////////////
+  //* DECONVOLVING WINDOW FUNCTION *//
+  ////////////////////////////////////
+  
+  if(rank == 0){
+    for(i=0; i<GV.NGRID; i++){
+      for(j=0; j<GV.NGRID; j++){
+	for(k=0; k<GV.NGRID; k++){
+	  
+	  id_cell = INDEX(i,j,k);
+	  
+	  denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	  denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	  
+	}// for k
+      }// for j
+    }// for i
+  }// if
+
+  
+  
+  ////////////////////////////////////
+  //* GETTING SET K FOR THE K1 LEG *//
+  ////////////////////////////////////
   q1 = (struct densityContrast *) calloc( floor(3 * M_PI * GV.NGRID * GV.NGRID * GV.S_KF * 0.5), 
 					  sizeof(struct densityContrast) );
   if(q1 == NULL){
@@ -201,7 +343,12 @@ int main(int argc, char *argv[]){
     printf("***********************************\n\n");
     exit(0);
   }
-
+  
+  
+  
+  ////////////////////////////////////
+  //* GETTING SET K FOR THE K2 LEG *//
+  ////////////////////////////////////
   q2 = (struct densityContrast *) calloc( floor(3 * M_PI * GV.NGRID * GV.NGRID * GV.S_KF * 0.5), 
 					  sizeof(struct densityContrast) );
   if(q2 == NULL){
@@ -412,13 +559,13 @@ int main(int argc, char *argv[]){
 	if( indexcord[MIN]<=m3[X] && m3[X]<=indexcord[MAX] && 
 	    indexcord[MIN]<=m3[Y] && m3[Y]<=indexcord[MAX] && 
 	    indexcord[MIN]<=m3[Z] && m3[Z]<=indexcord[MAX] ){
-	  
+
 	  i = (m3[X]>=0) ? m3[X] : GV.NGRID+m3[X];
 	  j = (m3[Y]>=0) ? m3[Y] : GV.NGRID+m3[Y];
 	  k = (m3[Z]>=0) ? m3[Z] : GV.NGRID+m3[Z];
 	  
 	  kMag = VECTORMAG(kpos[i],kpos[j],kpos[k]);
-	    
+	  
 	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
 	    
 	    id_cell = INDEX(i,j,k);
