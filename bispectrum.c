@@ -313,27 +313,25 @@ int main(int argc, char *argv[]){
   //* DECONVOLVING WINDOW FUNCTION *//
   ////////////////////////////////////
   
-  if(rank == 0){
-    for(i=0; i<GV.NGRID; i++){
-      for(j=0; j<GV.NGRID; j++){
-	for(k=0; k<GV.NGRID; k++){
-	  
-	  id_cell = INDEX(i,j,k);
-	  
-	  denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	  denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	  
-	}// for k
-      }// for j
-    }// for i
-  }// if
-
-  
-  
+  for(i=0; i<GV.NGRID; i++){
+    for(j=0; j<GV.NGRID; j++){
+      for(k=0; k<GV.NGRID; k++){
+	
+	id_cell = INDEX(i,j,k);
+	
+	denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	
+      }// for k
+    }// for j
+  }// for i
+    
+    
+    
   ////////////////////////////////////
   //* GETTING SET K FOR THE K1 LEG *//
   ////////////////////////////////////
-  q1 = (struct densityContrast *) calloc( floor(3 * M_PI * GV.NGRID * GV.NGRID * GV.S_KF * 0.5), 
+  q1 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID*GV.NGRID*GV.S_KF*0.5), 
 					  sizeof(struct densityContrast) );
   if(q1 == NULL){
     printf("\n***********************************");
@@ -349,7 +347,7 @@ int main(int argc, char *argv[]){
   ////////////////////////////////////
   //* GETTING SET K FOR THE K2 LEG *//
   ////////////////////////////////////
-  q2 = (struct densityContrast *) calloc( floor(3 * M_PI * GV.NGRID * GV.NGRID * GV.S_KF * 0.5), 
+  q2 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID*GV.NGRID*GV.S_KF*0.5), 
 					  sizeof(struct densityContrast) );
   if(q2 == NULL){
     printf("\n***********************************");
@@ -566,7 +564,8 @@ int main(int argc, char *argv[]){
 	  
 	  kMag = VECTORMAG(kpos[i],kpos[j],kpos[k]);
 	  
-	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
+	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && 
+	      ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
 	    
 	    id_cell = INDEX(i,j,k);
 
@@ -574,10 +573,10 @@ int main(int argc, char *argv[]){
 	      continue;
 	    
 	    bindata[l].I_delta3 += 
-	      (+ denConK[q1[rand_i].id][0] * denConK[q2[rand_j].id][0] * denConK[id_cell][0]
-	       - denConK[q1[rand_i].id][0] * denConK[q2[rand_j].id][1] * denConK[id_cell][1]
-	       - denConK[q1[rand_i].id][1] * denConK[q2[rand_j].id][0] * denConK[id_cell][1]
-	       - denConK[q1[rand_i].id][1] * denConK[q2[rand_j].id][1] * denConK[id_cell][0] );
+	      (+denConK[q1[rand_i].id][0]*denConK[q2[rand_j].id][0]*denConK[id_cell][0]
+	       -denConK[q1[rand_i].id][0]*denConK[q2[rand_j].id][1]*denConK[id_cell][1]
+	       -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][0]*denConK[id_cell][1]
+	       -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][1]*denConK[id_cell][0] );
 	    	        
 	    bindata[l].Ntri++;
 	      
