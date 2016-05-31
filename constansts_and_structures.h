@@ -9,8 +9,8 @@
 /////////////////////////////
 
 /* Index preprocessor for the C-Order */
-#define INDEX(i,j,k)     (1L*k) + GV.NGRID * ( (1L*j) + GV.NGRID * (1L*i) )
-#define COMPLEXMAG(A,i)  ( (A[i][0] * A[i][0]) + (A[i][1] * A[i][1]) )
+#define INDEX(i,j,k) (1L*k) + GV.NGRID * ( (1L*j) + GV.NGRID * (1L*i) )
+#define COMPLEXMAG(A,i) ( (A[i][0] * A[i][0]) + (A[i][1] * A[i][1]) )
 #define VECTORMAG(x,y,z) sqrt( (x * x) + (y * y) + (z * z) )
 
 #define RE 0  // Macro to indicate the real part of a complex value
@@ -34,17 +34,25 @@ fftw_complex *denConX = NULL; // Density contrast in X-space
 fftw_complex *denConK = NULL; // Density contrast in K-space
 fftw_plan forwardPlan;
 
+// FFTW variables
+//fftw_complex *D20_complex = NULL; // D20 array to do Fourier transform
+//fftw_plan D20Plan;
+
 
 
 ////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES FOR INTERPOLATION IN DAUBECHIES-TYPES SCHEMES //
 ///////////////////////////////////////////////////////////////////
 gsl_interp_accel *acc = NULL;
-gsl_spline *spline = NULL;
+gsl_spline *splineRe = NULL;
+gsl_spline *splineIm = NULL;
+gsl_spline *splineMag2 = NULL;
 int len_array_D20 = 0;
-double *x_D20 = NULL;
-double *y_D20 = NULL;
-//FILE *fin_D20 = NULL;
+double *k_D20 = NULL;
+double *Re_D20 = NULL;
+double *Im_D20 = NULL;
+double *Kmag2_D20 = NULL;
+FILE *fin_D20 = NULL;
 
 
 
@@ -61,7 +69,8 @@ struct densityContrast{
 
 /* Global variales */
 struct globalVariables{
-  int      NGRID;          // Number of cell in each axis.
+  int      NGRID;          // Number of cell in each axis
+  long int NGRID2;         // Axis cell number to the square NGRID^2
   long int NGRID3;         // Total number of cells (NGRID3 = NGRID^3)
   int      GADGET_VERSION; // GADGET version of the snapshot
   double   L;              // Lenght of the simulation in Mpc

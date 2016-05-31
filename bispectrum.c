@@ -22,31 +22,38 @@
 
 int main(int argc, char *argv[]){
   int i, j, k, l;                  // Counter in the X, Y, and Z axis.
-  unsigned long int rand_i;        /* Index for the subsample of density contrast */
-  unsigned long int rand_j;        /* in the range between                        */
-  //unsigned long int rand_k; /* k1-DELTA_K/2 to k1+DELTA_K/2                */
+  unsigned long int rand_i;        /* Index for the subsample of density 
+				      contrast in the range between                
+				      k1-DELTA_K/2 to k1+DELTA_K/2 */
+  unsigned long int rand_j;
+  //unsigned long int rand_k;
   long int id_cell;                // Counter for the id of the cell
   double kMag;                     /* Magnitude of the wavenumber vector */
   FILE *fout=NULL;                 // File handler to output
-  double *kpos;                    /* Array of positions values according to FFTW 
-				      k-position convention */ 
-  int *indexpos=NULL;              /* Array of index values according to FFTW 
-				      k-position convention */
+  double *kpos;                    /* Array of positions values according 
+				      to FFTW k-position convention */ 
+  int *indexpos=NULL;              /* Array of index values according 
+				      to FFTW k-position convention */
   int indexcord[2];
   int m3[3];
   int rank, size;
   int Nbins;
   int *taskBin=NULL;
-  double (*W_k)(double) = NULL; // Memory addres to the window function
-  struct densityContrast *q1=NULL; /* Array of structure with the subset of 
+  double (*W_k_Re)(double) = NULL; // Addres to the window function
+  double (*W_k_Im)(double) = NULL; // Addres to the window function
+  double (*W2_k)(double) = NULL; // Addres to the window function
+  struct densityContrast *q1=NULL; /* Array of structure with subset of 
 				      density contrast with range between 
-				      k1-DELTA_K/2 to k1+DELTA_K/2 */
-  struct densityContrast *q2=NULL; /* Array of structure with the subset of 
-				      density contrast with range between 
-				      k2-DELTA_K/2 to k2+DELTA_K/2 */
-  struct binStruct *bindata=NULL;  /* Data structure with information of the 
-				      measures in the taken bins */
+				      k-DELTA_K/2 to k+DELTA_K/2 */
+  struct densityContrast *q2=NULL; 
+  struct binStruct *bindata=NULL;  /* Data structure with information of
+				      the measures in the taken bins */
   
+  double denConCor_i[2],denConCor_j[2],denConCor_k[2];
+  double WRe, WIm, WMag2;
+  double D20_complexki0,D20_complexkj0,D20_complexkk0;
+  double D20_complexki1,D20_complexkj1,D20_complexkk1;
+    
   MPI_Status status;
   int chunk;
 
@@ -155,8 +162,13 @@ int main(int argc, char *argv[]){
   //* SENDING ALL DELTAK GRID TO OTHER PROCESSORS *//
   ///////////////////////////////////////////////////
   chunk = (GV.NGRID3)/sizeof(fftw_complex);
-  for(l=0; l<sizeof(fftw_complex); l++)
-    MPI_Bcast(denConK+(l*chunk), chunk*sizeof(fftw_complex), MPI_BYTE, 0, MPI_COMM_WORLD); 
+  for(l=0; l<sizeof(fftw_complex); l++){
+    MPI_Bcast( denConK+(l*chunk),
+	       chunk*sizeof(fftw_complex),
+	       MPI_BYTE,
+	       0,
+	       MPI_COMM_WORLD );
+  }
   
   
   
@@ -195,7 +207,7 @@ int main(int argc, char *argv[]){
   /* These are the minimum and maximum integer vectors 
      possibles according to the grid taken  */
   indexcord[MIN] = -(GV.NGRID/2);
-  indexcord[MAX] =  (GV.NGRID/2)-1;
+  indexcord[MAX] =  (GV.NGRID/2);
   
   
   
@@ -203,108 +215,63 @@ int main(int argc, char *argv[]){
   //* DEFINING THE WINDOW FUNCTION TO USE *//
   ///////////////////////////////////////////
   if( strcmp(GV.SCHEME, "NGP") == 0 ){
-    W_k = W_NGP; //NGP
+    W_k_Re = W_NGP; //NGP
+    W_k_Im = zero;
+    W2_k = Sum_W2_NGP;
   }
   else if( strcmp(GV.SCHEME, "CIC") == 0 ){ 
-    W_k = W_CIC; //CIC
+    W_k_Re = W_CIC; //CIC
+    W_k_Im = zero;
+    W2_k = Sum_W2_CIC;
   }
   else if( strcmp(GV.SCHEME, "TSC") == 0 ){
-    W_k = W_TSC; // TSC
+    W_k_Re = W_TSC; // TSC
+    W_k_Im = zero;
+    W2_k = Sum_W2_TSC;
   }
   else if( strcmp(GV.SCHEME, "D20") == 0 ){
-
-    len_array_D20 = 39;
-    x_D20 = (double *) calloc( len_array_D20, sizeof(double));
-    y_D20 = (double *) calloc( len_array_D20, sizeof(double));
-
-    x_D20[0]  = 0.000000000000;
-    x_D20[1]  = 0.105263157895;
-    x_D20[2]  = 0.210526315789;
-    x_D20[3]  = 0.315789473684;
-    x_D20[4]  = 0.421052631579;
-    x_D20[5]  = 0.526315789474;
-    x_D20[6]  = 0.631578947368;
-    x_D20[7]  = 0.736842105263;
-    x_D20[8]  = 0.842105263158;
-    x_D20[9]  = 0.947368421053;
-    x_D20[10] = 1.052631578947;
-    x_D20[11] = 1.157894736842;
-    x_D20[12] = 1.263157894737;
-    x_D20[13] = 1.368421052632;
-    x_D20[14] = 1.473684210526;
-    x_D20[15] = 1.578947368421;
-    x_D20[16] = 1.684210526316;
-    x_D20[17] = 1.789473684211;
-    x_D20[18] = 1.894736842105;
-    x_D20[19] = 2.000000000000;
-    x_D20[20] = 2.105263157895;
-    x_D20[21] = 2.210526315789;
-    x_D20[22] = 2.315789473684;
-    x_D20[23] = 2.421052631579;
-    x_D20[24] = 2.526315789474;
-    x_D20[25] = 2.631578947368;
-    x_D20[26] = 2.736842105263;
-    x_D20[27] = 2.842105263158;
-    x_D20[28] = 2.947368421053;
-    x_D20[29] = 3.052631578947;
-    x_D20[30] = 3.157894736842;
-    x_D20[31] = 3.263157894737;
-    x_D20[32] = 3.368421052632;
-    x_D20[33] = 3.473684210526;
-    x_D20[34] = 3.578947368421;
-    x_D20[35] = 3.684210526316;
-    x_D20[36] = 3.789473684211;
-    x_D20[37] = 3.894736842105;
-    x_D20[38] = 4.000000000000;
     
-    y_D20[0]  = 1.000000000000;
-    y_D20[1]  = 0.999999986964;
-    y_D20[2]  = 0.999999947844;
-    y_D20[3]  = 0.999999865073;
-    y_D20[4]  = 0.999996615502;
-    y_D20[5]  = 0.999865850668;
-    y_D20[6]  = 0.997888980263;
-    y_D20[7]  = 0.983901583682;
-    y_D20[8]  = 0.929829547217;
-    y_D20[9]  = 0.801587086807;
-    y_D20[10] = 0.597770493103;
-    y_D20[11] = 0.367763547417;
-    y_D20[12] = 0.178328576874;
-    y_D20[13] = 0.064525672159;
-    y_D20[14] = 0.016095961628;
-    y_D20[15] = 0.002430216092;
-    y_D20[16] = 0.000174403891;
-    y_D20[17] = 0.000003474525;
-    y_D20[18] = 0.000000003493;
-    y_D20[19] = 0.000000000009;
-    y_D20[20] = 0.000000002651;
-    y_D20[21] = 0.000001909750;
-    y_D20[22] = 0.000068979711;
-    y_D20[23] = 0.000666947923;
-    y_D20[24] = 0.002917323470;
-    y_D20[25] = 0.007255209141;
-    y_D20[26] = 0.011531053543;
-    y_D20[27] = 0.012504254578;
-    y_D20[28] = 0.009622917401;
-    y_D20[29] = 0.005399117417;
-    y_D20[30] = 0.002259675865;
-    y_D20[31] = 0.000719121329;
-    y_D20[32] = 0.000174034058;
-    y_D20[33] = 0.000030590879;
-    y_D20[34] = 0.000003474474;
-    y_D20[35] = 0.000000201352;
-    y_D20[36] = 0.000000003493;
-    y_D20[37] = 0.000000000002;
-    y_D20[38] = 0.000000000007;
+    len_array_D20 = 399;
+    int err;
+    
+    k_D20     = (double *) calloc( len_array_D20, sizeof(double));
+    Re_D20    = (double *) calloc( len_array_D20, sizeof(double));
+    Im_D20    = (double *) calloc( len_array_D20, sizeof(double));
+    Kmag2_D20 = (double *) calloc( len_array_D20, sizeof(double));
+
+    fin_D20 = fopen("./D20.txt", "r");
+
+    for(i=0; i<len_array_D20; i++){
+      err=fscanf( fin_D20,
+		  "%lf %lf %lf %lf", 
+		  &k_D20[i],
+		  &Re_D20[i],
+		  &Im_D20[i],
+		  &Kmag2_D20[i] );
+    }
+
+    fclose(fin_D20);
     
     // GSL interpolation allocation
-    acc    = gsl_interp_accel_alloc(); // accelerator
-    spline = gsl_spline_alloc(gsl_interp_cspline, len_array_D20); // spline
+    acc = gsl_interp_accel_alloc(); // accelerator
 
-    // GSL init
-    gsl_spline_init(spline, x_D20, y_D20, len_array_D20);
+    splineRe   = gsl_spline_alloc( gsl_interp_cspline,
+				   len_array_D20); // spline
+    splineIm   = gsl_spline_alloc( gsl_interp_cspline,
+				   len_array_D20); // spline
+    splineMag2 = gsl_spline_alloc( gsl_interp_cspline,
+				   len_array_D20); // spline
     
-    W_k = W_D20; // D20
+    // GSL init
+    gsl_spline_init(splineRe,   k_D20, Re_D20,    len_array_D20);
+    gsl_spline_init(splineIm,   k_D20, Im_D20,    len_array_D20);
+    gsl_spline_init(splineMag2, k_D20, Kmag2_D20, len_array_D20);
+    
+    if(err){}
+    
+    W_k_Re = W_D20_Re; // D20
+    W_k_Im = W_D20_Im;
+    W2_k = Sum_W2_D20;
   }
   
   
@@ -312,26 +279,83 @@ int main(int argc, char *argv[]){
   ////////////////////////////////////
   //* DECONVOLVING WINDOW FUNCTION *//
   ////////////////////////////////////
-  
-  for(i=0; i<GV.NGRID; i++){
-    for(j=0; j<GV.NGRID; j++){
-      for(k=0; k<GV.NGRID; k++){
+
+  /*
+    if( strcmp(GV.SCHEME, "D20") == 0 ){
+    double D20_complexi0, D20_complexj0,D20_complexk0;
+  double D20_complexi1, D20_complexj1,D20_complexk1;
+  double WRe, WIm, WMag2;
+    double dRe, dIm;
+    for(i=0; i<GV.NGRID; i++){
+      
+      //D20_complexi0=gsl_spline_eval(splineRe, kpos[i]/GV.KN, acc);
+      //D20_complexi1=gsl_spline_eval(splineIm, kpos[i]/GV.KN, acc);
+      D20_complexi0=gsl_spline_eval(splineRe, (1.0*indexpos[i])/(GV.NGRID/2), acc);
+      D20_complexi1=gsl_spline_eval(splineIm, (1.0*indexpos[i])/(GV.NGRID/2), acc);
+      //indexpos[i]
+      
+      for(j=0; j<GV.NGRID; j++){
 	
-	id_cell = INDEX(i,j,k);
+	//D20_complexj0=gsl_spline_eval(splineRe, kpos[j]/GV.KN, acc);
+	//D20_complexj1=gsl_spline_eval(splineIm, kpos[j]/GV.KN, acc);
+	D20_complexj0=gsl_spline_eval(splineRe, (1.0*indexpos[j])/(GV.NGRID/2), acc);
+	D20_complexj1=gsl_spline_eval(splineIm, (1.0*indexpos[j])/(GV.NGRID/2), acc);
 	
-	denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	
-      }// for k
-    }// for j
-  }// for i
+	for(k=0; k<GV.NGRID; k++){
+	  
+	  D20_complexk0=gsl_spline_eval(splineRe, (1.0*indexpos[k])/(GV.NGRID/2), acc);
+	  D20_complexk1=gsl_spline_eval(splineIm, (1.0*indexpos[k])/(GV.NGRID/2), acc);
+	  
+	  WRe = ( +D20_complexi0 * D20_complexj0 * D20_complexk0
+		  -D20_complexi0 * D20_complexj1 * D20_complexk1
+		  -D20_complexi1 * D20_complexj0 * D20_complexk1
+		  -D20_complexi1 * D20_complexj1 * D20_complexk0);
+	  
+	  WIm = ( +D20_complexi0 * D20_complexj0 * D20_complexk1
+		  +D20_complexi0 * D20_complexj1 * D20_complexk0
+		  +D20_complexi1 * D20_complexj0 * D20_complexk0
+		  -D20_complexi1 * D20_complexj1 * D20_complexk1);
+
+	  //WRe=1.0;
+	  //WIm=0.0;
+
+	  WMag2 = (WRe*WRe) + (WIm*WIm);
+	  
+	  id_cell = INDEX(i,j,k);
+
+	  dRe = ( denConK[id_cell][0]*WRe + denConK[id_cell][1]*WIm)/WMag2;
+	  dIm = (-denConK[id_cell][0]*WIm + denConK[id_cell][1]*WRe)/WMag2;
+	  
+	  denConK[id_cell][0] = dRe;
+	  denConK[id_cell][1] = dIm;
+	  
+	}// for k
+      }// for j
+    }// for i
+  }
+  else{ // NGP, CIC, TSC
+
+    for(i=0; i<GV.NGRID; i++){
+      for(j=0; j<GV.NGRID; j++){
+	for(k=0; k<GV.NGRID; k++){
+	  
+	  id_cell = INDEX(i,j,k);
+	  
+	  denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	  denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+	  
+	}// for k
+      }// for j
+    }// for i
     
+  }
+  */
     
     
   ////////////////////////////////////
   //* GETTING SET K FOR THE K1 LEG *//
   ////////////////////////////////////
-  q1 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID*GV.NGRID*GV.S_KF*0.5), 
+  q1 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID2*GV.S_KF*0.5), 
 					  sizeof(struct densityContrast) );
   if(q1 == NULL){
     printf("\n***********************************");
@@ -347,7 +371,7 @@ int main(int argc, char *argv[]){
   ////////////////////////////////////
   //* GETTING SET K FOR THE K2 LEG *//
   ////////////////////////////////////
-  q2 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID*GV.NGRID*GV.S_KF*0.5), 
+  q2 = (struct densityContrast *) calloc( floor(3.0*M_PI*GV.NGRID2*GV.S_KF*0.5), 
 					  sizeof(struct densityContrast) );
   if(q2 == NULL){
     printf("\n***********************************");
@@ -447,7 +471,9 @@ int main(int argc, char *argv[]){
 	  
 	  GV.Nk1++;
 	  
-	  GV.sumDelta2_k1 += COMPLEXMAG(denConK, id_cell) ;
+	  GV.sumDelta2_k1 += COMPLEXMAG(denConK, id_cell)/( W2_k(kpos[i]) *
+							    W2_k(kpos[j]) *
+							    W2_k(kpos[k]) );
 	  
 	}// if bindata[l].k1-GV.DELTA_K*0.5 < kMag < bindata[l].k1+GV.DELTA_K*0.5 )
 	
@@ -480,7 +506,9 @@ int main(int argc, char *argv[]){
 	  
 	  GV.Nk2++;
 	  
-	  GV.sumDelta2_k2 += COMPLEXMAG(denConK, id_cell) ;
+	  GV.sumDelta2_k2 += COMPLEXMAG(denConK, id_cell)/( W2_k(kpos[i]) *
+							    W2_k(kpos[j]) *
+							    W2_k(kpos[k]) );
 	  
 	}// if bindata[l].k2-GV.DELTA_K*0.5 < kMag < bindata[l].k2+GV.DELTA_K*0.5
 	
@@ -516,13 +544,16 @@ int main(int argc, char *argv[]){
 	
 	  kMag = VECTORMAG(kpos[i],kpos[j],kpos[k]);
 	
-	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
+	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && 
+	      ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
 	    
 	    id_cell = INDEX(i,j,k);
 	    
 	    bindata[l].Nk3++;
 	    
-	    bindata[l].sumDelta2_k3 += COMPLEXMAG(denConK, id_cell) ;
+	    bindata[l].sumDelta2_k3 += COMPLEXMAG(denConK, id_cell)/( W2_k(kpos[i]) *
+								      W2_k(kpos[j]) *
+								      W2_k(kpos[k]) );
 	  
 	  }// if bindata[l].k2-GV.DELTA_K*0.5 < kMag < bindata[l].k2+GV.DELTA_K*0.5 )
 	  
@@ -571,12 +602,119 @@ int main(int argc, char *argv[]){
 
 	    if( q1[rand_i].id==id_cell || q2[rand_j].id==id_cell)
 	      continue;
-	    
-	    bindata[l].I_delta3 += 
+
+	    /*
+	      bindata[l].I_delta3 += 
 	      (+denConK[q1[rand_i].id][0]*denConK[q2[rand_j].id][0]*denConK[id_cell][0]
-	       -denConK[q1[rand_i].id][0]*denConK[q2[rand_j].id][1]*denConK[id_cell][1]
-	       -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][0]*denConK[id_cell][1]
-	       -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][1]*denConK[id_cell][0] );
+	      -denConK[q1[rand_i].id][0]*denConK[q2[rand_j].id][1]*denConK[id_cell][1]
+	      -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][0]*denConK[id_cell][1]
+	      -denConK[q1[rand_i].id][1]*denConK[q2[rand_j].id][1]*denConK[id_cell][0] );
+	    */
+
+	    if( strcmp(GV.SCHEME, "D20") == 0 ){ // D20
+	      
+	      D20_complexki0 = W_k_Re(q1[rand_i].triplex[X]*GV.KF);
+	      D20_complexkj0 = W_k_Re(q1[rand_i].triplex[Y]*GV.KF);
+	      D20_complexkk0 = W_k_Re(q1[rand_i].triplex[Z]*GV.KF);
+
+	      D20_complexki1 = W_k_Im(q1[rand_i].triplex[X]*GV.KF);
+	      D20_complexkj1 = W_k_Im(q1[rand_i].triplex[Y]*GV.KF);
+	      D20_complexkk1 = W_k_Im(q1[rand_i].triplex[Z]*GV.KF);
+
+	      WRe = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki0 * D20_complexkj1 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj0 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk0);
+	      
+	      WIm = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk1
+		      +D20_complexki0 * D20_complexkj1 * D20_complexkk0
+		      +D20_complexki1 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk1);
+
+	      WMag2 = (WRe*WRe) + (WIm*WIm);
+	      
+	      denConCor_i[0] = (denConK[q1[rand_i].id][0]*WRe + denConK[q1[rand_i].id][1]*WIm)/WMag2;
+	      denConCor_i[1] = (denConK[q1[rand_i].id][1]*WRe - denConK[q1[rand_i].id][0]*WIm)/WMag2;
+
+	      //////////////////////////////////////////////////////////////////////
+	      
+	      D20_complexki0 = W_k_Re(q2[rand_j].triplex[X]*GV.KF);
+	      D20_complexkj0 = W_k_Re(q2[rand_j].triplex[Y]*GV.KF);
+	      D20_complexkk0 = W_k_Re(q2[rand_j].triplex[Z]*GV.KF);
+
+	      D20_complexki1 = W_k_Im(q2[rand_j].triplex[X]*GV.KF);
+	      D20_complexkj1 = W_k_Im(q2[rand_j].triplex[Y]*GV.KF);
+	      D20_complexkk1 = W_k_Im(q2[rand_j].triplex[Z]*GV.KF);
+
+	      WRe = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki0 * D20_complexkj1 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj0 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk0);
+	      
+	      WIm = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk1
+		      +D20_complexki0 * D20_complexkj1 * D20_complexkk0
+		      +D20_complexki1 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk1);
+
+	      WMag2 = (WRe*WRe) + (WIm*WIm);
+	      
+	      denConCor_j[0] = (denConK[q2[rand_j].id][0]*WRe + denConK[q2[rand_j].id][1]*WIm)/WMag2;
+	      denConCor_j[1] = (denConK[q2[rand_j].id][1]*WRe - denConK[q2[rand_j].id][0]*WIm)/WMag2;
+
+	      //////////////////////////////////////////////////////////////////////
+
+	      D20_complexki0 = W_k_Re(m3[X]*GV.KF);
+	      D20_complexkj0 = W_k_Re(m3[Y]*GV.KF);
+	      D20_complexkk0 = W_k_Re(m3[Z]*GV.KF);
+
+	      D20_complexki1 = W_k_Im(m3[X]*GV.KF);
+	      D20_complexkj1 = W_k_Im(m3[Y]*GV.KF);
+	      D20_complexkk1 = W_k_Im(m3[Z]*GV.KF);
+
+	      WRe = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki0 * D20_complexkj1 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj0 * D20_complexkk1
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk0);
+	      
+	      WIm = ( +D20_complexki0 * D20_complexkj0 * D20_complexkk1
+		      +D20_complexki0 * D20_complexkj1 * D20_complexkk0
+		      +D20_complexki1 * D20_complexkj0 * D20_complexkk0
+		      -D20_complexki1 * D20_complexkj1 * D20_complexkk1);
+
+	      WMag2 = (WRe*WRe) + (WIm*WIm);
+	      	      
+	      denConCor_k[0] = (denConK[id_cell][0]*WRe + denConK[id_cell][1]*WIm)/WMag2;
+	      denConCor_k[1] = (denConK[id_cell][1]*WRe - denConK[id_cell][0]*WIm)/WMag2;
+	      
+	    }else{ // NGP, CIC, TSC
+	      
+	      denConCor_i[0] = denConK[q1[rand_i].id][0]/( W_k_Re(q1[rand_i].triplex[X]*GV.KF) *
+							   W_k_Re(q1[rand_i].triplex[Y]*GV.KF) *
+							   W_k_Re(q1[rand_i].triplex[Z]*GV.KF) );
+	      denConCor_i[1] = denConK[q1[rand_i].id][1]/( W_k_Re(q1[rand_i].triplex[X]*GV.KF) *
+							   W_k_Re(q1[rand_i].triplex[Y]*GV.KF) *
+							   W_k_Re(q1[rand_i].triplex[Z]*GV.KF) );
+	      
+	      denConCor_j[0] = denConK[q2[rand_j].id][0]/( W_k_Re(q2[rand_j].triplex[X]*GV.KF) *
+							   W_k_Re(q2[rand_j].triplex[Y]*GV.KF) *
+							   W_k_Re(q2[rand_j].triplex[Z]*GV.KF) );
+	      denConCor_j[1] = denConK[q2[rand_j].id][1]/( W_k_Re(q2[rand_j].triplex[X]*GV.KF) *
+							   W_k_Re(q2[rand_j].triplex[Y]*GV.KF) *
+							   W_k_Re(q2[rand_j].triplex[Z]*GV.KF) );
+	      
+	      denConCor_k[0] = denConK[id_cell][0]/( W_k_Re(m3[X]*GV.KF) *
+						     W_k_Re(m3[Y]*GV.KF) *
+						     W_k_Re(m3[Z]*GV.KF) );
+	      denConCor_k[1] = denConK[id_cell][1]/( W_k_Re(m3[X]*GV.KF) *
+						     W_k_Re(m3[Y]*GV.KF) *
+						     W_k_Re(m3[Z]*GV.KF) );
+	      
+	    }
+
+	    bindata[l].I_delta3 += (+denConCor_i[0]*denConCor_j[0]*denConCor_k[0]
+				    -denConCor_i[0]*denConCor_j[1]*denConCor_k[1]
+				    -denConCor_i[1]*denConCor_j[0]*denConCor_k[1]
+				    -denConCor_i[1]*denConCor_j[1]*denConCor_k[0] );
 	    	        
 	    bindata[l].Ntri++;
 	      
@@ -725,6 +863,17 @@ int main(int argc, char *argv[]){
   ///////////////////
   //* FREE MEMORY *//
   ///////////////////
+  if( strcmp(GV.SCHEME, "D20") == 0 ){
+    gsl_spline_free( splineRe );
+    gsl_spline_free( splineIm );
+    gsl_spline_free( splineMag2 );
+    gsl_interp_accel_free( acc );
+
+    free(k_D20);
+    free(Re_D20);
+    free(Im_D20);
+    free(Kmag2_D20);
+  }
   //fclose(fout);
   free(kpos);
   free(indexpos);

@@ -197,7 +197,8 @@ int readBinaryFile(int rank){
   err = fread(&(GV.SCHEME[1]),    sizeof(char),     1, fdata);
   err = fread(&(GV.SCHEME[2]),    sizeof(char),     1, fdata);
   GV.SCHEME[3] = '\0';
-  
+
+  GV.NGRID2     = (1L*GV.NGRID) * (1L*GV.NGRID);
   GV.NGRID3     = (1L*GV.NGRID) * (1L*GV.NGRID) * (1L*GV.NGRID);
   GV.SIM_VOL    = GV.L * GV.L * GV.L;
   GV.KF         = (2.0*M_PI) / GV.L;
@@ -283,7 +284,13 @@ double pow3(double x){
   return x*x*x;
 }
 
+double pow4(double x){
+  return x*x*x*x;
+}
 
+
+
+// Window function in Fourier space
 double W_NGP(double k){
   return sinc( (0.5*k)/GV.KN );
 }
@@ -296,6 +303,34 @@ double W_TSC(double k){
   return pow3( sinc( (0.5*k)/GV.KN ) );
 }
 
-double W_D20(double k){
-  return gsl_spline_eval(spline, fabs(k)/GV.KN, acc);
+double W_D20_Re(double k){
+  return gsl_spline_eval(splineRe, k/GV.KN, acc);
+}
+
+double W_D20_Im(double k){
+  return gsl_spline_eval(splineIm, k/GV.KN, acc);
+}
+
+double zero(double k){
+  return 0.0;
+}
+
+
+//Sum square window function
+double Sum_W2_NGP(double k){
+  return 1.0;
+}
+
+double Sum_W2_CIC(double k){
+  double sine = sin( (M_PI*0.5*k)/GV.KN );
+  return 1.0 - 0.666666666666667*pow2( sine );
+}
+
+double Sum_W2_TSC(double k){
+  double sine = sin( (M_PI*0.5*k)/GV.KN );
+  return 1.0 - pow2( sine ) + 0.133333333333333*pow4( sine );
+}
+
+double Sum_W2_D20(double k){
+  return 1.0;
 }
