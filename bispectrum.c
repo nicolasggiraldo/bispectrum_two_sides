@@ -255,12 +255,13 @@ int main(int argc, char *argv[]){
     // GSL interpolation allocation
     acc = gsl_interp_accel_alloc(); // accelerator
 
+    // spline interpolation
     splineRe   = gsl_spline_alloc( gsl_interp_cspline,
-				   len_array_D20); // spline
+				   len_array_D20); 
     splineIm   = gsl_spline_alloc( gsl_interp_cspline,
-				   len_array_D20); // spline
+				   len_array_D20);
     splineMag2 = gsl_spline_alloc( gsl_interp_cspline,
-				   len_array_D20); // spline
+				   len_array_D20);
     
     // GSL init
     gsl_spline_init(splineRe,   k_D20, Re_D20,    len_array_D20);
@@ -283,72 +284,72 @@ int main(int argc, char *argv[]){
   /*
     if( strcmp(GV.SCHEME, "D20") == 0 ){
     double D20_complexi0, D20_complexj0,D20_complexk0;
-  double D20_complexi1, D20_complexj1,D20_complexk1;
-  double WRe, WIm, WMag2;
+    double D20_complexi1, D20_complexj1,D20_complexk1;
+    double WRe, WIm, WMag2;
     double dRe, dIm;
     for(i=0; i<GV.NGRID; i++){
-      
-      //D20_complexi0=gsl_spline_eval(splineRe, kpos[i]/GV.KN, acc);
-      //D20_complexi1=gsl_spline_eval(splineIm, kpos[i]/GV.KN, acc);
-      D20_complexi0=gsl_spline_eval(splineRe, (1.0*indexpos[i])/(GV.NGRID/2), acc);
-      D20_complexi1=gsl_spline_eval(splineIm, (1.0*indexpos[i])/(GV.NGRID/2), acc);
-      //indexpos[i]
-      
-      for(j=0; j<GV.NGRID; j++){
-	
-	//D20_complexj0=gsl_spline_eval(splineRe, kpos[j]/GV.KN, acc);
-	//D20_complexj1=gsl_spline_eval(splineIm, kpos[j]/GV.KN, acc);
-	D20_complexj0=gsl_spline_eval(splineRe, (1.0*indexpos[j])/(GV.NGRID/2), acc);
-	D20_complexj1=gsl_spline_eval(splineIm, (1.0*indexpos[j])/(GV.NGRID/2), acc);
-	
-	for(k=0; k<GV.NGRID; k++){
-	  
-	  D20_complexk0=gsl_spline_eval(splineRe, (1.0*indexpos[k])/(GV.NGRID/2), acc);
-	  D20_complexk1=gsl_spline_eval(splineIm, (1.0*indexpos[k])/(GV.NGRID/2), acc);
-	  
-	  WRe = ( +D20_complexi0 * D20_complexj0 * D20_complexk0
-		  -D20_complexi0 * D20_complexj1 * D20_complexk1
-		  -D20_complexi1 * D20_complexj0 * D20_complexk1
-		  -D20_complexi1 * D20_complexj1 * D20_complexk0);
-	  
-	  WIm = ( +D20_complexi0 * D20_complexj0 * D20_complexk1
-		  +D20_complexi0 * D20_complexj1 * D20_complexk0
-		  +D20_complexi1 * D20_complexj0 * D20_complexk0
-		  -D20_complexi1 * D20_complexj1 * D20_complexk1);
-
-	  //WRe=1.0;
-	  //WIm=0.0;
-
-	  WMag2 = (WRe*WRe) + (WIm*WIm);
-	  
-	  id_cell = INDEX(i,j,k);
-
-	  dRe = ( denConK[id_cell][0]*WRe + denConK[id_cell][1]*WIm)/WMag2;
-	  dIm = (-denConK[id_cell][0]*WIm + denConK[id_cell][1]*WRe)/WMag2;
-	  
-	  denConK[id_cell][0] = dRe;
-	  denConK[id_cell][1] = dIm;
-	  
-	}// for k
-      }// for j
+    
+    //D20_complexi0=gsl_spline_eval(splineRe, kpos[i]/GV.KN, acc);
+    //D20_complexi1=gsl_spline_eval(splineIm, kpos[i]/GV.KN, acc);
+    D20_complexi0=gsl_spline_eval(splineRe, (1.0*indexpos[i])/(GV.NGRID/2), acc);
+    D20_complexi1=gsl_spline_eval(splineIm, (1.0*indexpos[i])/(GV.NGRID/2), acc);
+    //indexpos[i]
+    
+    for(j=0; j<GV.NGRID; j++){
+    
+    //D20_complexj0=gsl_spline_eval(splineRe, kpos[j]/GV.KN, acc);
+    //D20_complexj1=gsl_spline_eval(splineIm, kpos[j]/GV.KN, acc);
+    D20_complexj0=gsl_spline_eval(splineRe, (1.0*indexpos[j])/(GV.NGRID/2), acc);
+    D20_complexj1=gsl_spline_eval(splineIm, (1.0*indexpos[j])/(GV.NGRID/2), acc);
+    
+    for(k=0; k<GV.NGRID; k++){
+    
+    D20_complexk0=gsl_spline_eval(splineRe, (1.0*indexpos[k])/(GV.NGRID/2), acc);
+    D20_complexk1=gsl_spline_eval(splineIm, (1.0*indexpos[k])/(GV.NGRID/2), acc);
+    
+    WRe = ( +D20_complexi0 * D20_complexj0 * D20_complexk0
+    -D20_complexi0 * D20_complexj1 * D20_complexk1
+    -D20_complexi1 * D20_complexj0 * D20_complexk1
+    -D20_complexi1 * D20_complexj1 * D20_complexk0);
+    
+    WIm = ( +D20_complexi0 * D20_complexj0 * D20_complexk1
+    +D20_complexi0 * D20_complexj1 * D20_complexk0
+    +D20_complexi1 * D20_complexj0 * D20_complexk0
+    -D20_complexi1 * D20_complexj1 * D20_complexk1);
+    
+    //WRe=1.0;
+    //WIm=0.0;
+    
+    WMag2 = (WRe*WRe) + (WIm*WIm);
+    
+    id_cell = INDEX(i,j,k);
+    
+    dRe = ( denConK[id_cell][0]*WRe + denConK[id_cell][1]*WIm)/WMag2;
+    dIm = (-denConK[id_cell][0]*WIm + denConK[id_cell][1]*WRe)/WMag2;
+    
+    denConK[id_cell][0] = dRe;
+    denConK[id_cell][1] = dIm;
+    
+    }// for k
+    }// for j
     }// for i
-  }
-  else{ // NGP, CIC, TSC
-
+    }
+    else{ // NGP, CIC, TSC
+    
     for(i=0; i<GV.NGRID; i++){
-      for(j=0; j<GV.NGRID; j++){
-	for(k=0; k<GV.NGRID; k++){
-	  
-	  id_cell = INDEX(i,j,k);
-	  
-	  denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	  denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
-	  
-	}// for k
-      }// for j
+    for(j=0; j<GV.NGRID; j++){
+    for(k=0; k<GV.NGRID; k++){
+    
+    id_cell = INDEX(i,j,k);
+    
+    denConK[id_cell][0] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+    denConK[id_cell][1] /= ( W_k(kpos[i])*W_k(kpos[j])*W_k(kpos[k]) );
+    
+    }// for k
+    }// for j
     }// for i
     
-  }
+    }
   */
     
     
@@ -434,7 +435,7 @@ int main(int argc, char *argv[]){
     bindata[l].sumDelta2_k3 = 0.0;
     bindata[l].Pk3 = 0.0;         
     bindata[l].Pk3_Error = 0.0;
-
+    
     bindata[l].Ntri = 0;       
     bindata[l].I_delta3 = 0.0; 
     bindata[l].Bk = 0.0;
@@ -450,7 +451,7 @@ int main(int argc, char *argv[]){
     
     i++;
   }
-
+  
   // Getting set q1 associated to k1
   for(i=0; i<GV.NGRID; i++){
     for(j=0; j<GV.NGRID; j++){
@@ -484,6 +485,7 @@ int main(int argc, char *argv[]){
   GV.Pk1  = GV.sumDelta2_k1 / GV.Nk1;
   GV.Pk1 *= GV.SIM_VOL / (1.0 * GV.NGRID3 * GV.NGRID3);
   GV.Pk1 -= GV.SHOT_NOISE;
+  GV.Pk1_Error = (GV.Pk1*(GV.DELTA_K/GV.K1))/sqrt(2.0*M_PI);
 
 
   // Getting sets associated to k2
@@ -519,6 +521,7 @@ int main(int argc, char *argv[]){
   GV.Pk2  = GV.sumDelta2_k2 / GV.Nk2;
   GV.Pk2 *= GV.SIM_VOL / (1.0 * GV.NGRID3 * GV.NGRID3);
   GV.Pk2 -= GV.SHOT_NOISE;
+  GV.Pk2_Error = (GV.Pk2*(GV.DELTA_K/GV.K2))/sqrt(2.0*M_PI);
 
 
   
@@ -564,8 +567,10 @@ int main(int argc, char *argv[]){
     bindata[l].Pk3  = bindata[l].sumDelta2_k3 / bindata[l].Nk3;
     bindata[l].Pk3 *= GV.SIM_VOL / (1.0 * GV.NGRID3 * GV.NGRID3);
     bindata[l].Pk3 -= GV.SHOT_NOISE;
+    bindata[l].Pk3_Error = (bindata[l].Pk3*(GV.DELTA_K/bindata[l].k3))/sqrt(2.0*M_PI);
     
     
+    /* Taking all possible triangle configurations */
     for( rand_i=0; rand_i<GV.Nk1; rand_i++){
       for( rand_j=0; rand_j<GV.Nk2; rand_j++){
 	
@@ -577,7 +582,7 @@ int main(int argc, char *argv[]){
 	  }while( (rand_i==rand_j) || (rand_i==rand_k) || (rand_j==rand_k) );
 	*/
 	
-	/* Looking for closed triangles */
+	/* If both sides have the same id then continue */
 	if(q1[rand_i].id == q2[rand_j].id)
 	  continue;
 	
@@ -585,18 +590,32 @@ int main(int argc, char *argv[]){
 	m3[Y] = - q1[rand_i].triplex[Y] - q2[rand_j].triplex[Y];
 	m3[Z] = - q1[rand_i].triplex[Z] - q2[rand_j].triplex[Z];
 	
-	if( indexcord[MIN]<=m3[X] && m3[X]<=indexcord[MAX] && 
-	    indexcord[MIN]<=m3[Y] && m3[Y]<=indexcord[MAX] && 
-	    indexcord[MIN]<=m3[Z] && m3[Z]<=indexcord[MAX] ){
+	//if( indexcord[MIN]<=m3[X] && m3[X]<=indexcord[MAX] && 
+	//indexcord[MIN]<=m3[Y] && m3[Y]<=indexcord[MAX] && 
+	//indexcord[MIN]<=m3[Z] && m3[Z]<=indexcord[MAX] ){
+	if( fabs(m3[X])<=indexcord[MAX] && 
+	    fabs(m3[Y])<=indexcord[MAX] && 
+	    fabs(m3[Z])<=indexcord[MAX] ){
 
-	  i = (m3[X]>=0) ? m3[X] : GV.NGRID+m3[X];
-	  j = (m3[Y]>=0) ? m3[Y] : GV.NGRID+m3[Y];
-	  k = (m3[Z]>=0) ? m3[Z] : GV.NGRID+m3[Z];
+	  kMag = VECTORMAG(m3[X]*GV.KF,m3[Y]*GV.KF,m3[Z]*GV.KF);
 	  
-	  kMag = VECTORMAG(kpos[i],kpos[j],kpos[k]);
+	  //i = (m3[X]>=0) ? m3[X] : GV.NGRID+m3[X];
+	  //j = (m3[Y]>=0) ? m3[Y] : GV.NGRID+m3[Y];
+	  //k = (m3[Z]>=0) ? m3[Z] : GV.NGRID+m3[Z];
+	  
+	  //kMag = VECTORMAG(kpos[i],kpos[j],kpos[k]);
 	  
 	  if( ( bindata[l].k3-GV.DELTA_K*0.5 < kMag ) && 
 	      ( kMag < bindata[l].k3+GV.DELTA_K*0.5 ) ){
+
+	    if(m3[Z]==indexcord[MAX]){
+	      m3[X] *= -1;
+	      m3[Y] *= -1;
+	      m3[Z] *= -1;
+	    }
+	    i = (m3[X]>=0) ? m3[X] : GV.NGRID+m3[X];
+	    j = (m3[Y]>=0) ? m3[Y] : GV.NGRID+m3[Y];
+	    k = (m3[Z]>=0) ? m3[Z] : GV.NGRID+m3[Z];
 	    
 	    id_cell = INDEX(i,j,k);
 
@@ -735,17 +754,28 @@ int main(int argc, char *argv[]){
     bindata[l].Bk *= (1.0/(1.0*GV.NGRID3));
     
     // Stimating shot noise for bispectrum
-    bindata[l].Bk_shotnoise = GV.SHOT_NOISE * (GV.Pk1+GV.Pk2+bindata[l].Pk3) + (GV.SHOT_NOISE*GV.SHOT_NOISE);
+    bindata[l].Bk_shotnoise = GV.SHOT_NOISE * (GV.Pk1+GV.Pk2+bindata[l].Pk3) + POW2(GV.SHOT_NOISE);
     
     /* Substracting shotnoise term  */
     bindata[l].Bk -= bindata[l].Bk_shotnoise;
 
+    /* Bispectrum error */
+    bindata[l].Bk_Error  = sqrt(M_PI/(GV.K1*GV.K2*bindata[l].k3*POW3(GV.S_KF)));
+    bindata[l].Bk_Error *= sqrt(GV.Pk1*GV.Pk2*bindata[l].Pk3);
+
     /* Estimating dimensionless bispectrum */
     bindata[l].Qk  = bindata[l].Bk;
-    bindata[l].Qk /= ( GV.Pk1*GV.Pk2 + GV.Pk2*bindata[l].Pk3 + bindata[l].Pk3*GV.Pk1 );
+    bindata[l].Qk /= ( GV.Pk1*GV.Pk2 + 
+		       GV.Pk2*bindata[l].Pk3 + 
+		       bindata[l].Pk3*GV.Pk1 );
 
-    //Pk1_Error = sqrt( (GV.KF*GV.KF*GV.KF)/(4.0*M_PI*k1*k1*GV.DELTA_K) ) * Pk1;
-    //Bk_Error  = sqrt( (GV.KF*GV.KF*GV.KF)/(4.0*M_PI*k1*k1*GV.DELTA_K) ) * Pk1;
+    bindata[l].Qk_Error  = bindata[l].Bk_Error;
+    bindata[l].Qk_Error -= bindata[l].Qk*( (GV.Pk2+bindata[l].Pk3)*GV.Pk1_Error+
+					   (bindata[l].Pk3+GV.Pk1)*GV.Pk2_Error+
+					   (GV.Pk1+GV.Pk2)*bindata[l].Pk3_Error);
+    bindata[l].Qk_Error /= ( GV.Pk1*GV.Pk2 + 
+			     GV.Pk2*bindata[l].Pk3 + 
+			     bindata[l].Pk3*GV.Pk1 );
     
   }// for l
   
@@ -764,7 +794,13 @@ int main(int argc, char *argv[]){
       for(j=0; j<Nbins; j++){
 
 	if(l == taskBin[j]){
-	  MPI_Recv(&bindata[j], sizeof(struct binStruct), MPI_BYTE, taskBin[j], j, MPI_COMM_WORLD, &status);
+	  MPI_Recv(&bindata[j], 
+		   sizeof(struct binStruct), 
+		   MPI_BYTE, 
+		   taskBin[j], 
+		   j, 
+		   MPI_COMM_WORLD, 
+		   &status);
 	  printf("Receiving bin %d from %d to 0\n",j, rank); fflush(stdout);
 	}// if
       }// for j
@@ -778,7 +814,12 @@ int main(int argc, char *argv[]){
 	for(j=0; j<Nbins; j++){
 	  if(l == taskBin[j]){
 	    printf("Sending bin %d from rank %d to 0\n",j, rank); fflush(stdout);
-	    MPI_Send(&bindata[j], (int) sizeof(struct binStruct), MPI_BYTE, 0, j, MPI_COMM_WORLD);
+	    MPI_Send(&bindata[j], 
+		     (int) sizeof(struct binStruct), 
+		     MPI_BYTE, 
+		     0, 
+		     j, 
+		     MPI_COMM_WORLD);
 	  }// l==taskBin[j]
 	}// for j
       }// rank==l
@@ -839,19 +880,19 @@ int main(int argc, char *argv[]){
     fprintf(fout,"# HUBBLEPARAM    = %lf\n", GV.HUBBLEPARAM);
     fprintf(fout,"\n");
     
-    fprintf(fout,"#%19s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s\n",
+    fprintf(fout,"#%19s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s\n",
 	    "k1", "k2", "k3", "P(k1)", "P(k2)", "P(k3)", "B(k1,k2,k3)", "Q(k1,k2,k3)", 
-	    "sumDelta2_k1", "sumDelta2_k2", "sumDelta2_k3", "Nk1", "Nk2", "Nk3", 
-	    "I_delta3", "Ntri");
+	    "Error_P(k1)", "Error_P(k2)", "Error_P(k3)", "Error_B123", "Error_Q123");
     
     /* Printing bispectrum data  */
     for(l=0; l<Nbins; l++){
       if(bindata[l].Ntri==0)
 	continue;
-      fprintf(fout,"%20lf %20lf %20lf %20e %20e %20e %20e %20e %20e %20e %20e %20ld %20ld %20ld %20e %20ld\n",
-	      GV.K1, GV.K2, bindata[l].k3, GV.Pk1, GV.Pk2, bindata[l].Pk3, bindata[l].Bk, bindata[l].Qk, 
-	      GV.sumDelta2_k1, GV.sumDelta2_k2, bindata[l].sumDelta2_k3, GV.Nk1, GV.Nk2, bindata[l].Nk3, 
-	      bindata[l].I_delta3, bindata[l].Ntri);
+      fprintf(fout,"%20lf %20lf %20lf %20e %20e %20e %20e %20e %20e %20e %20e %20e %20e\n",
+	      GV.K1, GV.K2, bindata[l].k3, GV.Pk1, GV.Pk2, bindata[l].Pk3, 
+	      bindata[l].Bk, bindata[l].Qk, 
+	      GV.Pk1_Error, GV.Pk2_Error, bindata[l].Pk3_Error, 
+	      bindata[l].Bk_Error, bindata[l].Qk_Error);
     }// for l
     fclose(fout);
     

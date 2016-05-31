@@ -13,6 +13,9 @@
 #define COMPLEXMAG(A,i) ( (A[i][0] * A[i][0]) + (A[i][1] * A[i][1]) )
 #define VECTORMAG(x,y,z) sqrt( (x * x) + (y * y) + (z * z) )
 
+#define POW2(x) ((x)*(x))
+#define POW3(x) ((x)*(x)*(x))
+
 #define RE 0  // Macro to indicate the real part of a complex value
 #define IM 1  // Macro to indicate the imaginary part of a complex value
 
@@ -126,7 +129,8 @@ struct binStruct{
   double I_delta3;     /* Sum of elements denConk1*denConk2*denConk3 which 
 			  form a triangle. Because denConk is a complex 
 			  quantity the sum is also complex */
-  long int Ntri;       // Number of counted triangles for bispectrum estimation  
+  long int Ntri;       /* Number of counted triangles for bispectrum 
+			  estimation */
   double Bk;           /* Bispectrum value to measure from the simulation 
 			  snapshot in general the bispectrum is a complex                                   
 			  quantity but as the avarage of density constrast                           
@@ -137,4 +141,7 @@ struct binStruct{
 			  with the real part of the bispectrum only */
   double Qk_Error;     // Reduced bispectrum error
   double Bk_shotnoise; // Bispectrum shotnoise
+  int symmetry;        /*Symmetric factor according to the configuration 
+			 if equilateral symmetry is 6 and isosceles and
+			 general triangles are 2 and 1 respectively */
 };
