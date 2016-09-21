@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
   }
   else if( strcmp(GV.SCHEME, "D20") == 0 ){
     
-    len_array_D20 = 399;
+    len_array_D20 = 400;
     int err;
     
     k_D20     = (double *) calloc( len_array_D20, sizeof(double));
@@ -537,12 +537,12 @@ int main(int argc, char *argv[]){
     if(rank != taskBin[l])
       continue;
 
-    if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)<=bindata[l].k3 &&  bindata[l].k3<=(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
-      {
-	printf("rank:%3d, k3 = %lf\t skipped!\n", rank, bindata[l].k3);
-	fflush(stdout);
-	continue;
-      }
+    //if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)<=bindata[l].k3 &&  bindata[l].k3<=(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
+    //{
+    //printf("rank:%3d, k3 = %lf\t skipped!\n", rank, bindata[l].k3);
+    //fflush(stdout);
+    //continue;
+    //}
     
     printf("rank:%3d, k3 = %lf\n", rank, bindata[l].k3);
     fflush(stdout);
