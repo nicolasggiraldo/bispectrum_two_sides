@@ -5,7 +5,7 @@
 #Number of cells per axis is N
 #Total number of cells is N^3
 FILE_NAME /home/user/simBoxes/Box400x512_z_0_NGRID_512_D20.dens
-OUTPUT /home/user/test/Bk_eq_Box400x512_z_0_NGRID_512_D20_MPI.dat
+OUTPUT /home/user/test/Bk_Box400x512_z_0_NGRID_512_D20_k1_0.13_2k2.dat
 K1 0.13
 K2 0.26
 S_KF 3.0
