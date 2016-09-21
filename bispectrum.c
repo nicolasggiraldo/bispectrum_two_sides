@@ -537,7 +537,7 @@ int main(int argc, char *argv[]){
     if(rank != taskBin[l])
       continue;
 
-    if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)<=GV.K3 &&  GV.K3<=(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
+    if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)<=bindata[l].k3 &&  bindata[l].k3<=(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
       {
 	printf("rank:%3d, k3 = %lf\t skipped!\n", rank, bindata[l].k3);
 	fflush(stdout);
