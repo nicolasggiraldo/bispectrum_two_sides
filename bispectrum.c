@@ -536,13 +536,13 @@ int main(int argc, char *argv[]){
   for(l=0; l<Nbins; l++){
     if(rank != taskBin[l])
       continue;
-
-    //if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)<=bindata[l].k3 &&  bindata[l].k3<=(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
-    //{
-    //printf("rank:%3d, k3 = %lf\t skipped!\n", rank, bindata[l].k3);
-    //fflush(stdout);
-    //continue;
-    //}
+    
+    if( fabs(GV.K1-GV.K2)-(1.5*GV.DELTA_K)>bindata[l].k3 || bindata[l].k3>(GV.K1+GV.K2)+(1.5*GV.DELTA_K) )
+      {
+	printf("rank:%3d, k3 = %lf\t skipped!\n", rank, bindata[l].k3);
+	fflush(stdout);
+	continue;
+      }
     
     printf("rank:%3d, k3 = %lf\n", rank, bindata[l].k3);
     fflush(stdout);
@@ -887,19 +887,19 @@ int main(int argc, char *argv[]){
     fprintf(fout,"# HUBBLEPARAM    = %lf\n", GV.HUBBLEPARAM);
     fprintf(fout,"\n");
     
-    fprintf(fout,"#%19s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s\n",
+    fprintf(fout,"#%19s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s %20s\n",
 	    "k1", "k2", "k3", "P(k1)", "P(k2)", "P(k3)", "B(k1,k2,k3)", "Q(k1,k2,k3)", 
-	    "Error_P(k1)", "Error_P(k2)", "Error_P(k3)", "Error_B123", "Error_Q123");
+	    "Error_P(k1)", "Error_P(k2)", "Error_P(k3)", "Error_B123", "Error_Q123", "Ntri");
     
     /* Printing bispectrum data  */
     for(l=0; l<Nbins; l++){
       if(bindata[l].Ntri==0)
 	continue;
-      fprintf(fout,"%20lf %20lf %20lf %20e %20e %20e %20e %20e %20e %20e %20e %20e %20e\n",
+      fprintf(fout,"%20lf %20lf %20lf %20e %20e %20e %20e %20e %20e %20e %20e %20e %20e %20ld\n",
 	      GV.K1, GV.K2, bindata[l].k3, GV.Pk1, GV.Pk2, bindata[l].Pk3, 
 	      bindata[l].Bk, bindata[l].Qk, 
 	      GV.Pk1_Error, GV.Pk2_Error, bindata[l].Pk3_Error, 
-	      bindata[l].Bk_Error, bindata[l].Qk_Error);
+	      bindata[l].Bk_Error, bindata[l].Qk_Error, bindata[l].Ntri);
     }// for l
     fclose(fout);
     
